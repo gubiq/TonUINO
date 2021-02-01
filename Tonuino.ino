@@ -26,6 +26,8 @@ static const uint32_t cardCookie = 322417479;
 SoftwareSerial mySoftwareSerial(2, 3); // RX, TX
 uint16_t numTracksInFolder;
 uint16_t currentTrack;
+uint16_t bfrprevFolder;
+uint16_t bfrQueueIndex;
 uint16_t firstTrack;
 uint8_t queue[255];
 uint8_t volume;
@@ -862,7 +864,16 @@ void playFolder() {
   // Hörspielmodus: eine zufällige Datei aus dem Ordner
   if (myFolder->mode == 1) {
     Serial.println(F("Hörspielmodus -> zufälligen Track wiedergeben"));
-    currentTrack = random(1, numTracksInFolder + 1);
+    if (myFolder->folder != bfrprevFolder) {
+      Serial.println(F("Neue Karte, mische Liste"));
+      bfrprevFolder = myFolder->folder;
+      shuffleQueue();
+      bfrQueueIndex = 0;
+    } else {
+      Serial.println(F("Gleiche Karte, gehe weiter"));
+      bfrQueueIndex = (bfrQueueIndex + 1) % numTracksInFolder;
+    }
+    currentTrack = queue[bfrQueueIndex];
     Serial.println(currentTrack);
     mp3.playFolderTrack(myFolder->folder, currentTrack);
   }
